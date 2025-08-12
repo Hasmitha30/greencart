@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(MANAGER)
+  createdAt DateTime @default(now())
+}
+
+model Driver {
+  id               Int      @id @default(autoincrement())
+  name             String
+  currentShiftHours Float    @default(0)
+  past7DayHours    Json     @default("[]")
+  createdAt        DateTime @default(now())
+  orders           Order[]
+}
+
+model Route {
+  id              Int      @id @default(autoincrement())
+  routeId         String   @unique
+  distanceKm      Float
+  trafficLevel    TrafficLevel @default(LOW)
+  baseTimeMinutes Int
+  orders          Order[]
+  createdAt       DateTime @default(now())
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  orderId       String   @unique
+  valueRs       Float
+  assignedRoute Route?   @relation(fields: [assignedRouteId], references: [id])
+  assignedRouteId Int?
+  scheduledFor  DateTime?
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+  driver        Driver?  @relation(fields: [driverId], references: [id])
+  driverId      Int?
+}
+
+model Simulation {
+  id         Int      @id @default(autoincrement())
+  params     Json
+  results    Json
+  createdAt  DateTime @default(now())
+}
+
+enum Role {
+  MANAGER
+  DRIVER
+}
+
+enum TrafficLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum OrderStatus {
+  PENDING
+  ASSIGNED
+  DELIVERED
+  CANCELLED
+}
